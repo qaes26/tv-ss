@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تلفزيون الحب - قيس وسارة ظاظا</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #050505;
+            color: white;
+            overflow: hidden;
+            height: 100dvh; /* يتناسب مع شاشات الموبايل الحديثة */
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* خلفية الغرفة والإضاءة المحيطية */
+        .wall-bg {
+            position: absolute; inset: 0; z-index: -2;
+            background: radial-gradient(circle at 50% 35%, #1f1f1f 0%, #050505 85%);
+        }
+        
+        .ambilight-glow {
+            position: absolute; top: 35%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%; height: 50%;
+            background: #000; filter: blur(70px); opacity: 0;
+            transition: background-color 0.8s ease, opacity 0.5s ease;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* حاوية التلفاز - معدلة لتكون أطول قليلاً على الموبايل ليتسع الكلام */
+        .tv-wrapper {
+            width: 94%;
+            max-width: 850px;
+            margin-top: 2vh;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tv-frame {
+            width: 100%;
+            /* نسبة 4/3 على الموبايل لتعطي مساحة رأسية للكلام، و 16/9 على الشاشات الكبيرة */
+            aspect-ratio: 4/3;
+            background: #111;
+            border-radius: 10px;
+            box-shadow: 
+                inset 0 0 3px rgba(255,255,255,0.15), 
+                0 0 0 5px #080808, 
+                0 0 0 8px #1c1c1c, 
+                0 20px 50px rgba(0,0,0,0.95);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 640px) {
+            .tv-frame {
+                aspect-ratio: 16/9;
+            }
+        }
+
+        .screen {
+            position: absolute; inset: 0;
+            background: #000;
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        /* تأثيرات زجاج الشاشة */
+        .glass-reflection {
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 40%, rgba(255,255,255,0.02) 100%);
+            pointer-events: none; z-index: 45;
+        }
+
+        .scanlines {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.25) 50%);
+            background-size: 100% 4px; pointer-events: none; z-index: 40; opacity: 0.25;
+        }
+
+        /* تشويش القنوات */
+        .static-noise {
+            position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E");
+            opacity: 0; pointer-events: none; z-index: 42;
+            transition: opacity 0.15s;
+        }
+
+        /* الطاولة الخشبية والريموت */
+        .table-surface {
+            width: 100%;
+            height: 36dvh;
+            min-height: 210px;
+            background: linear-gradient(to bottom, #1c100b 0%, #0a0503 100%);
+            z-index: 5;
+            box-shadow: 0 -8px 25px rgba(0,0,0,0.9);
+            border-top: 2px solid #2e1a12;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .tv-reflection {
+            position: absolute; top: 0; width: 85%; max-width: 800px; height: 12vh;
+            background: transparent; filter: blur(25px); opacity: 0;
+            z-index: 6; transition: background-color 0.5s, opacity 0.5s;
+            pointer-events: none;
+        }
+
+        /* الريموت المدمج والواضح */
+        .remote-container {
+            position: relative; z-index: 20;
+            width: 92%;
+            max-width: 350px;
+        }
+
+        .remote-panel {
+            background: linear-gradient(145deg, #222222, #121212);
+            border: 1px solid #383838;
+            border-radius: 35px;
+            padding: 12px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 
+                0 15px 30px rgba(0,0,0,0.8), 
+                0 4px 0 #0a0a0a,
+                inset 0 1px 1px rgba(255,255,255,0.1);
+        }
+
+        .btn {
+            border-radius: 50%; border: none; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            transition: all 0.15s ease; color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.15);
+        }
+        .btn:active { transform: scale(0.92); box-shadow: inset 0 3px 6px rgba(0,0,0,0.6); }
+        
+        /* زر التشغيل في المنتصف */
+        .btn-power { 
+            width: 64px; height: 64px;
+            background: radial-gradient(circle at 30% 30%, #ff4d4d, #b91c1c);
+            border: 2px solid #7f1d1d;
+        }
+        
+        .btn-arrow {
+            width: 50px; height: 50px;
+            background: linear-gradient(145deg, #374151, #1f2937);
+            border: 1px solid #4b5563;
+        }
+
+        .btn-heart {
+            width: 46px; height: 46px;
+            background: radial-gradient(circle at 30% 30%, #ec4899, #be185d);
+        }
+
+        @keyframes powerPulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); transform: scale(1); }
+            50% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); transform: scale(1.06); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
+        }
+        .needs-attention { animation: powerPulse 1.8s infinite; }
+
+        .power-hint {
+            position: absolute; top: -42px; left: 50%; transform: translateX(-50%);
+            background: #ffffff; color: #000000; padding: 4px 12px;
+            border-radius: 20px; font-weight: 900; font-size: 12px;
+            pointer-events: none; white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            animation: floatHint 1s ease-in-out infinite alternate;
+            z-index: 30;
+        }
+        .power-hint::after {
+            content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+            border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #ffffff;
+        }
+        @keyframes floatHint { from { transform: translate(-50%, 0); } to { transform: translate(-50%, -5px); } }
+
+        @keyframes turnOn {
+            0% { transform: scaleY(0.005) scaleX(0); background: #fff; }
+            60% { transform: scaleY(0.005) scaleX(1); background: #fff; }
+            100% { transform: scaleY(1) scaleX(1); background: transparent; }
+        }
+        .anim-on { animation: turnOn 0.45s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        
+        .led-light {
+            width: 8px; height: 8px; border-radius: 50%;
+            position: absolute; bottom: 8px; right: 20px;
+            z-index: 60; transition: all 0.3s;
+        }
+        .led-off { background: #dc2626; box-shadow: 0 0 6px #dc2626; }
+        .led-on { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+
+        .tv-text-shadow { text-shadow: 0 3px 8px rgba(0,0,0,0.85); }
+    </style>
+</head>
+<body>
+
+    <div class="wall-bg"></div>
+    <div id="ambilight" class="ambilight-glow"></div>
+
+    <!-- قسم التلفاز -->
+    <div class="tv-wrapper">
+        <div class="tv-frame">
+            <div class="screen" id="tvScreen">
+                <div class="glass-reflection"></div>
+                <div class="scanlines"></div>
+                <div id="staticNoise" class="static-noise"></div>
+                
+                <!-- الشاشة السوداء عند الإغلاق -->
+                <div id="blackScreen" class="absolute inset-0 bg-black z-20 flex items-center justify-center">
+                    <span class="text-neutral-800 text-xs font-bold tracking-widest">اضغطي زر التشغيل بالأسفل</span>
+                </div>
+
+                <!-- محتوى القنوات -->
+                <div id="content" class="absolute inset-0 flex flex-col justify-center items-center text-center p-4 sm:p-8 opacity-0 transition-opacity duration-300 z-10 overflow-hidden">
+                    <!-- يتم حقن المحتوى هنا عبر الجافاسكربت -->
+                </div>
+
+                <!-- رقم القناة بأعلى الشاشة -->
+                <div id="osd" class="absolute top-3 right-4 sm:top-5 sm:right-6 text-green-400 font-mono text-xl sm:text-4xl font-bold opacity-0 transition-opacity duration-300 z-50 bg-black/50 px-2 py-0.5 rounded">
+                    CH <span id="chNum">1</span>
+                </div>
+            </div>
+            
+            <div id="led" class="led-light led-off"></div>
+            <div class="absolute bottom-1 left-1/2 -translate-x-1/2 text-gray-500 text-[9px] font-bold tracking-[3px] z-50">SONY LOVE</div>
+        </div>
+        
+        <!-- أرجل التلفاز -->
+        <div class="w-full flex justify-between px-[18%] -mt-1 z-5">
+            <div class="w-3 h-4 sm:h-6 bg-[#0a0a0a] transform -skew-x-12 shadow-lg"></div>
+            <div class="w-3 h-4 sm:h-6 bg-[#0a0a0a] transform skew-x-12 shadow-lg"></div>
+        </div>
+    </div>
+
+    <!-- قسم الطاولة والريموت -->
+    <div class="table-surface">
+        <div id="tableReflection" class="tv-reflection"></div>
+        
+        <div class="remote-container">
+            <div class="remote-panel">
+                
+                <!-- الصف العلوي: شاشة القناة + زر الحب -->
+                <div class="flex justify-between items-center px-3 pt-1">
+                    <div class="flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-full border border-gray-800">
+                        <span class="text-[10px] text-gray-400 font-bold">القناة:</span>
+                        <span id="remoteCh" class="text-sm font-mono font-bold text-green-400">--</span>
+                    </div>
+
+                    <span class="text-[10px] text-gray-500 font-bold tracking-widest">QAIS REMOTE</span>
+
+                    <!-- زر إرسال القلوب -->
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] text-pink-400 font-bold">إرسال حب</span>
+                        <button onclick="sendLove()" class="btn btn-heart" title="أحبك">
+                            <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="w-full h-[1px] bg-gray-800"></div>
+
+                <!-- الصف الأساسي: السابق - التشغيل (بالمنتصف) - التالي -->
+                <div class="flex justify-around items-center py-1 relative">
+                    
+                    <!-- زر القناة السابقة -->
+                    <div class="flex flex-col items-center gap-1">
+                        <button onclick="changeChannel(-1)" class="btn btn-arrow" active>
+                            <i data-lucide="chevron-right" class="w-7 h-7"></i>
+                        </button>
+                        <span class="text-[10px] text-gray-400 font-bold">السابق</span>
+                    </div>
+
+                    <!-- زر التشغيل في المنتصف -->
+                    <div class="flex flex-col items-center relative -mt-2">
+                        <div id="powerHint" class="power-hint">اضغطي هنا للتشغيل ❤️</div>
+                        <button id="powerBtn" onclick="togglePower()" class="btn btn-power needs-attention" title="تشغيل">
+                            <i data-lucide="power" class="w-8 h-8"></i>
+                        </button>
+                        <span class="text-[11px] text-red-400 font-bold mt-1">تشغيل</span>
+                    </div>
+
+                    <!-- زر القناة التالية -->
+                    <div class="flex flex-col items-center gap-1">
+                        <button onclick="changeChannel(1)" class="btn btn-arrow">
+                            <i data-lucide="chevron-left" class="w-7 h-7"></i>
+                        </button>
+                        <span class="text-[10px] text-gray-400 font-bold">التالي</span>
+                    </div>
+
+                </div>
+
+            </div>
+            
+            <div class="text-center mt-2.5 text-gray-500 text-[11px] font-bold">
+                من إعداد وتصميم: <span class="text-amber-500">قيس جازي</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // قائمة القنوات (مصممة بأحجام خطوط ذكية تتناسب مع الموبايل والكمبيوتر)
+        const channels = [
+            {
+                name: "أخبار",
+                bg: "linear-gradient(135deg, #000428, #004e92)",
+                color: "#004e92",
+                html: `
+                    <div class="bg-red-600 text-white text-xs sm:text-xl font-black px-4 py-1 mb-3 sm:mb-5 animate-pulse rounded-full shadow-lg">🚨 خبر عاجل</div>
+                    <h1 class="text-2xl sm:text-5xl font-black text-white mb-3 sm:mb-5 tv-text-shadow">انقلاب في القلب!</h1>
+                    <p class="text-sm sm:text-2xl text-blue-100 font-bold leading-relaxed bg-black/30 p-3 sm:p-5 rounded-2xl border border-blue-400/20 max-w-lg">
+                        عاجل: "قيس" يعلن تمديد حالة الحب لـ <span class="text-yellow-300">"سارة ظاظا"</span> لمدة 100 عام قابلة للتجديد تلقائياً.
+                    </p>
+                `
+            },
+            {
+                name: "طبيعة",
+                bg: "linear-gradient(135deg, #0f3443, #34e89e)",
+                color: "#34e89e",
+                html: `
+                    <div class="border-2 border-yellow-400 bg-black/40 text-yellow-400 font-bold px-3 py-0.5 mb-3 sm:mb-5 tracking-widest text-xs sm:text-lg rounded">NAT GEO LOVE</div>
+                    <h1 class="text-2xl sm:text-5xl font-black text-white mb-3 sm:mb-5 tv-text-shadow">ظواهر كونية نادرة</h1>
+                    <p class="text-sm sm:text-2xl text-white font-bold leading-relaxed bg-black/40 p-3 sm:p-5 rounded-2xl max-w-lg">
+                        اكتشف العلماء أن ابتسامة <span class="text-yellow-300">"سارة ظاظا"</span> هي المصدر الرئيسي للطاقة والسعادة في حياة قيس.
+                    </p>
+                `
+            },
+            {
+                name: "سينما",
+                bg: "linear-gradient(135deg, #1f0000, #000000)",
+                color: "#dc2626",
+                html: `
+                    <div class="text-yellow-500 font-serif italic text-sm sm:text-2xl mb-1 sm:mb-3">★ Cinema VIP ★</div>
+                    <h1 class="text-4xl sm:text-7xl font-black text-white mb-3 sm:mb-5 tv-text-shadow" style="text-shadow: 0 0 25px #ef4444;">أحبكِ للأبد</h1>
+                    <p class="text-gray-200 text-xs sm:text-xl mb-3 sm:mb-5 bg-red-950/60 border border-red-800/50 px-4 py-1.5 rounded-full">
+                        العرض الحصري: قصة قيس و سارة ظاظا
+                    </p>
+                    <div class="flex gap-1 justify-center text-yellow-400 text-lg sm:text-2xl">★★★★★</div>
+                `
+            },
+            {
+                name: "طبخ",
+                bg: "linear-gradient(135deg, #c21500, #ffc500)",
+                color: "#f97316",
+                html: `
+                    <div class="flex items-center gap-2 mb-2 sm:mb-4 text-white bg-black/30 px-4 py-1 rounded-full">
+                        <i data-lucide="chef-hat" class="w-5 h-5 sm:w-8 sm:h-8"></i>
+                        <span class="text-sm sm:text-2xl font-bold">مطبخ الحب</span>
+                    </div>
+                    <h1 class="text-xl sm:text-4xl font-black text-white mb-3 sm:mb-5 tv-text-shadow">وصفة اليوم: السعادة</h1>
+                    <div class="text-xs sm:text-xl text-white font-bold bg-black/40 p-3 sm:p-5 rounded-2xl border border-white/20 text-right space-y-1">
+                        <p>🍯 <span class="text-yellow-300">المقادير:</span></p>
+                        <p>• عيون سارة ظاظا الحلوين</p>
+                        <p>• ضحكتها اللي بترد الروح</p>
+                        <p>• قلب قيس الدائب فيها</p>
+                    </div>
+                `
+            },
+            {
+                name: "تاريخ", 
+                bg: "linear-gradient(135deg, #3e2b14, #8b5a2b)",
+                color: "#d97706",
+                html: `
+                    <div class="border-y-2 border-amber-400 py-1 px-6 mb-3 sm:mb-5 bg-black/30">
+                        <h2 class="text-xs sm:text-2xl text-amber-400 font-bold tracking-wider">📜 قناة التاريخ</h2>
+                    </div>
+                    <h1 class="text-xl sm:text-4xl font-black text-white mb-3 sm:mb-4 tv-text-shadow">حدث في مثل هذا اليوم</h1>
+                    <p class="text-xs sm:text-2xl text-amber-100 font-bold leading-relaxed bg-black/40 p-3 sm:p-5 rounded-2xl max-w-lg">
+                        في كل يوم يمر، يزداد حب قيس لـ <span class="text-yellow-300">"سارة ظاظا"</span> بنسبة خيالية، ليدخل بذلك موسوعة غينيس كأعظم عاشق في التاريخ!
+                    </p>
+                `
+            },
+            {
+                name: "حقيقة صادمة",
+                bg: "linear-gradient(135deg, #831843, #db2777)",
+                color: "#ec4899",
+                html: `
+                    <div class="bg-yellow-400 text-black text-xs sm:text-xl font-black px-3 py-1 mb-2 sm:mb-4 animate-bounce rounded shadow-lg">⚠️ سبق صحفي خطير ⚠️</div>
+                    <h1 class="text-2xl sm:text-5xl font-black text-white mb-2 sm:mb-4 tv-text-shadow">كشف الحقيقة!</h1>
+                    <p class="text-xs sm:text-2xl text-white font-bold leading-relaxed bg-black/35 p-3 sm:p-5 rounded-2xl border border-pink-300/30 max-w-lg">
+                        بعد التحقيقات السرية.. اتضح أن <span class="text-yellow-300">"سارة ظاظا"</span> ليست كبيرة كما تدعي، بل هي <span class="text-pink-300">"طفلة صغيرة"</span> تحتاج للدلال 24 ساعة! 🍼🧸
+                    </p>
+                    <div class="mt-2.5 sm:mt-4 text-[11px] sm:text-lg text-yellow-200 font-bold bg-red-950/80 px-4 py-1 rounded-full border border-red-500/40">
+                        الحكم: ممنوع إزعاجها + شوكولاتة يومياً 🍫
+                    </div>
+                `
+            },
+            {
+                name: "طقس",
+                bg: "linear-gradient(135deg, #0284c7, #1e3a8a)",
+                color: "#38bdf8",
+                html: `
+                    <div class="flex items-center gap-2 text-yellow-300 mb-2">
+                        <i data-lucide="sun" class="w-8 h-8 sm:w-14 sm:h-14 animate-spin"></i>
+                    </div>
+                    <h1 class="text-xl sm:text-4xl font-black text-white mb-1 tv-text-shadow">نشرة الطقس العاطفية</h1>
+                    <div class="text-3xl sm:text-6xl font-black text-yellow-300 mb-2 tv-text-shadow">100° حب</div>
+                    <p class="text-xs sm:text-xl text-blue-100 font-bold bg-black/30 p-3 rounded-xl max-w-md">
+                        الأجواء مشمسة ودافئة في قلب قيس بوجود <span class="text-yellow-300">"سارة ظاظا"</span>، مع هطول زخات كثيفة من الشوق والحنان طوال الأسبوع.
+                    </p>
+                `
+            }
+        ];
+
+        let isOn = false;
+        let currentIdx = 0;
+        let osdTimeout;
+
+        const led = document.getElementById('led');
+        const blackScreen = document.getElementById('blackScreen');
+        const tvScreen = document.getElementById('tvScreen');
+        const content = document.getElementById('content');
+        const ambilight = document.getElementById('ambilight');
+        const tableReflection = document.getElementById('tableReflection');
+        const osd = document.getElementById('osd');
+        const chNum = document.getElementById('chNum');
+        const remoteCh = document.getElementById('remoteCh');
+        const powerBtn = document.getElementById('powerBtn');
+        const powerHint = document.getElementById('powerHint');
+        const staticNoise = document.getElementById('staticNoise');
+
+        function togglePower() {
+            isOn = !isOn;
+            powerHint.style.display = 'none';
+            powerBtn.classList.remove('needs-attention');
+
+            if (isOn) {
+                led.classList.remove('led-off');
+                led.classList.add('led-on');
+                blackScreen.classList.add('anim-on');
+                
+                // تشغيل تشويش خفيف عند الفتح
+                staticNoise.style.opacity = 0.6;
+                
+                setTimeout(() => {
+                    blackScreen.style.opacity = 0;
+                    staticNoise.style.opacity = 0;
+                    renderChannel();
+                }, 400);
+            } else {
+                led.classList.remove('led-on');
+                led.classList.add('led-off');
+                blackScreen.classList.remove('anim-on');
+                blackScreen.style.opacity = 1;
+                content.style.opacity = 0;
+                ambilight.style.opacity = 0;
+                tableReflection.style.opacity = 0;
+                remoteCh.innerText = "--";
+                osd.style.opacity = 0;
+            }
+        }
+
+        function changeChannel(dir) {
+            if (!isOn) {
+                // تنبيه لطيف إذا حاولت التقليب والتلفاز مطفأ
+                powerHint.style.display = 'block';
+                powerBtn.classList.add('needs-attention');
+                return;
+            }
+            
+            // إظهار تأثير الوشوشة بين القنوات
+            content.style.opacity = 0;
+            staticNoise.style.opacity = 0.5;
+            
+            currentIdx += dir;
+            if (currentIdx >= channels.length) currentIdx = 0;
+            if (currentIdx < 0) currentIdx = channels.length - 1;
+
+            setTimeout(() => {
+                staticNoise.style.opacity = 0;
+                renderChannel();
+            }, 220);
+        }
+
+        function renderChannel() {
+            const ch = channels[currentIdx];
+            
+            content.innerHTML = ch.html;
+            content.style.opacity = 1;
+
+            ambilight.style.backgroundColor = ch.color;
+            ambilight.style.opacity = 0.55;
+            
+            tableReflection.style.backgroundColor = ch.color;
+            tableReflection.style.opacity = 0.25;
+
+            tvScreen.style.background = ch.bg;
+
+            chNum.innerText = currentIdx + 1;
+            remoteCh.innerText = `0${currentIdx + 1}`;
+            
+            osd.style.opacity = 1;
+            clearTimeout(osdTimeout);
+            osdTimeout = setTimeout(() => osd.style.opacity = 0, 2000);
+
+            lucide.createIcons();
+        }
+
+        function sendLove() {
+            if(!isOn) {
+                togglePower();
+                return;
+            }
+            
+            const frame = document.querySelector('.tv-frame');
+            const emojis = ['❤️', '💖', '😍', '🌸', '✨'];
+
+            for(let i = 0; i < 20; i++) {
+                const heart = document.createElement('div');
+                heart.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+                heart.style.position = 'absolute';
+                heart.style.left = '50%';
+                heart.style.top = '50%';
+                heart.style.fontSize = (Math.random() * 22 + 16) + 'px';
+                heart.style.transform = 'translate(-50%, -50%) scale(0)';
+                heart.style.transition = 'all 0.9s cubic-bezier(0.1, 0.8, 0.3, 1)';
+                heart.style.zIndex = 100;
+                heart.style.pointerEvents = 'none';
+                
+                frame.appendChild(heart);
+                
+                setTimeout(() => {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 160 + 50;
+                    const x = Math.cos(angle) * distance;
+                    const y = Math.sin(angle) * distance;
+                    
+                    heart.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(1.2) rotate(${Math.random()*60 - 30}deg)`;
+                    heart.style.opacity = 0;
+                }, 30);
+
+                setTimeout(() => heart.remove(), 950);
+            }
+        }
+    </script>
+</body>
+</html>
